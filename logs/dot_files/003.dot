@@ -1,0 +1,16 @@
+digraph G{
+rankdir=LR;
+node[color="red",fontsize=14];
+edge[color="#00eeee80",fontsize=12, penwidth=1];
+elem0[shape="Mrecord", label="0 | data = 0 | next = 1 | prev = 0"];
+elem1[shape="Mrecord", label="1 | data = 1 | next = 2 | prev = 0"];
+elem2[shape="Mrecord", label="2 | data = 2 | next = 3 | prev = 1"];
+elem3[shape="Mrecord", label="3 | data = 3 | next = 6 | prev = 2"];
+elem4[shape="Mrecord", label="4 | data = 4 | next = 5 | prev = 3"];
+elem5[shape="Mrecord", label="5 | data = 5 | next = 0 | prev = 4"];
+elem6[shape="Mrecord", label="6 | data = 7 | next = 4 | prev = 3"];
+elem7[shape="Mrecord", label="7 | data = 0 | next = -1 | prev = 0"];
+elem0->elem1->elem2->elem3->elem4->elem5->elem6->elem5;
+edge[color="red",fontsize=12, penwidth=2];
+elem1->elem2->elem3->elem6->elem5->elem0->elem0;
+}
