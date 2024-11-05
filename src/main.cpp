@@ -14,7 +14,7 @@ int main()
         return EXIT_FAILURE;
     }
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 5; i++)
     {
         Dump(&list);
 
@@ -23,7 +23,7 @@ int main()
 
     Dump(&list);
 
-    InsertAfter(&list, 666, 2);
+    InsertBefore(&list, 666, 2);
 
     Dump(&list);
 

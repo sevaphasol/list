@@ -111,13 +111,13 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 {
     fputs("digraph G{\n"
           "rankdir=LR;\n"
-          "node[color=\"red\",fontsize=14];\n"
-          "edge[color=\"blue\",fontsize=12, penwidth=3];\n",
+          "node[color=\"red\",fontsize=14];\n",
           dot_file);
 
     DotPrintData(list, dot_file);
-    DotPrintNext(list, dot_file);
-    DotPrintFree(list, dot_file);
+    DotPrintSeq (list->next, list->len, dot_file);
+    DotPrintSeq (list->prev, list->len, dot_file);
+    // DotPrintFree(list, dot_file);
 
     fputs("}\n", dot_file);
 
@@ -128,7 +128,7 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 
 ListReturnCode DotPrintData(List_t* list, FILE* dot_file)
 {
-    for (int i = 0; i < list->len; i++)
+    for (int i = 0; i < list->size; i++)
     {
         fprintf(dot_file, "elem%d["
                           "shape=\"Mrecord\", "
@@ -137,7 +137,9 @@ ListReturnCode DotPrintData(List_t* list, FILE* dot_file)
                            i, i , list->data[i], list->next[i], list->prev[i]);
     }
 
-    for (int i = 0; i < list->len; i++)
+    fputs("edge[color=\"darkred\",fontsize=12, penwidth=1, weight=1000];\n", dot_file);
+
+    for (int i = 0; i < list->size; i++)
     {
         fprintf(dot_file, "elem%d->", i);
     }
@@ -149,18 +151,23 @@ ListReturnCode DotPrintData(List_t* list, FILE* dot_file)
 
 //------------------------------------------------//
 
-ListReturnCode DotPrintNext(List_t* list, FILE* dot_file)
+ListReturnCode DotPrintSeq(size_t* ind_arr, size_t len, FILE* dot_file)
 {
-    fputs("edge[color=\"red\",fontsize=12, penwidth=1];\n", dot_file);
+    fputs("edge[color=\"darkgreen\",fontsize=12, penwidth=1];\n", dot_file);
 
     fputs("elem0->", dot_file);
 
-    for (int i = 0; i < list->len - 1; i++)
+    size_t ind  = ind_arr[0];
+    int    iter = 0;
+
+    while (ind != 0 && iter++ < len - 1)
     {
-        fprintf(dot_file, "elem%ld->", list->next[i]);
+        fprintf(dot_file, "elem%ld->", ind);
+
+        ind = ind_arr[ind];
     }
 
-    fprintf(dot_file, "elem%ld;", list->next[list->len - 1]);
+    fputs("elem0;\n", dot_file);
 
     return LIST_SUCCESS;
 }
@@ -176,6 +183,11 @@ ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
                       "label=\"free | free = %ld"
                       "\"];\n",
                       list->free);
+
+    if (list->free == -1)
+    {
+        return LIST_SUCCESS;
+    }
 
     size_t free_ind = list->free;
 
@@ -345,14 +357,28 @@ ListReturnCode InsertAfter(List_t* list, ListElem_t elem, size_t pos)
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
 
-    size_t free_pos      = list->free;
-    list->free           = list->next[list->free];
+    size_t free_pos = list->free;
 
-    list->data[free_pos] = elem;
-    list->prev[free_pos] = pos;
-    list->next[free_pos] = list->next[pos];
+    if (free_pos == -1)
+    {
+        fprintf(stderr, "LIST OVERFLOW\n");
 
-    list->next[pos]      = free_pos;
+        return LIST_OVERFLOW_ERROR;
+    }
+
+    list->free                  = list->next[list->free];
+
+    list->data[free_pos]        = elem;
+    list->prev[free_pos]        = pos;
+    list->next[free_pos]        = list->next[pos];
+
+    list->prev[list->next[pos]] = free_pos;
+    list->next[pos]             = free_pos;
+
+    if (pos == list->prev[0])
+    {
+        list->prev[0] = free_pos;
+    }
 
     list->len++;
 
@@ -366,14 +392,23 @@ ListReturnCode InsertBefore(List_t* list, ListElem_t elem, size_t pos)
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
 
-    size_t free_pos      = list->free;
-    list->free           = list->next[list->free];
+    size_t free_pos = list->free;
 
-    list->data[free_pos] = elem;
-    list->next[free_pos] = pos;
-    list->prev[free_pos] = list->prev[pos];
+    if (free_pos == -1)
+    {
+        fprintf(stderr, "LIST OVERFLOW\n");
 
-    list->prev[pos]      = free_pos;
+        return LIST_OVERFLOW_ERROR;
+    }
+
+    list->free                  = list->next[list->free];
+
+    list->data[free_pos]        = elem;
+    list->next[free_pos]        = pos;
+    list->prev[free_pos]        = list->prev[pos];
+
+    list->next[list->prev[pos]] = free_pos;
+    list->prev[pos]             = free_pos;
 
     list->len++;
 
