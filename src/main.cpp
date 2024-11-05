@@ -14,21 +14,16 @@ int main()
         return EXIT_FAILURE;
     }
 
-    InsertAfter(&list, 1, 0);
+    for (int i = 0; i < 4; i++)
+    {
+        Dump(&list);
+
+        InsertAfter(&list, 1488 + i, i);
+    }
 
     Dump(&list);
 
-    InsertAfter(&list, 2, 1);
-
-    Dump(&list);
-
-    InsertAfter(&list, 3, 2);
-    InsertAfter(&list, 4, 3);
-    InsertAfter(&list, 5, 4);
-
-    Dump(&list);
-
-    InsertAfter   (&list, 7, 3);
+    InsertAfter(&list, 666, 2);
 
     Dump(&list);
 

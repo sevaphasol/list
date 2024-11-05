@@ -6,7 +6,7 @@
 
 #define LIST_INIT .size      = 0,                  \
                   .elem_size = sizeof(ListElem_t), \
-                  .len       = 0,                  \
+                  .len       = 1,                  \
                   .data      = nullptr,            \
                   .next      = nullptr,            \
                   .prev      = nullptr,            \
@@ -38,6 +38,7 @@ enum ListReturnCode
     LIST_ALLOCATE_ERROR,
     LIST_STRUCT_NULL_PTR_ERROR,
     LIST_ARGS_NULL_PTR_ERROR,
+    LIST_INVALID_POS_ERROR,
 };
 
 typedef int ListElem_t;
@@ -70,6 +71,9 @@ ListReturnCode Dump         (List_t* list);
 
 ListReturnCode MakePngDump  (List_t* list);
 ListReturnCode MakeDotDump  (List_t* list, FILE* dot_file);
+ListReturnCode DotPrintData (List_t* list, FILE* dot_file);
+ListReturnCode DotPrintNext(List_t* list, FILE* dot_file);
+ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
 ListReturnCode MakeHtmlDump (List_t* list);
 
 ListReturnCode Front        (List_t* list, size_t* ret_pos);
