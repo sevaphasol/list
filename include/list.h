@@ -92,14 +92,15 @@ ListReturnCode Prev         (List_t* list, size_t pos, size_t* ret_pos);
 
 ListReturnCode PushFront    (List_t* list, ListElem_t elem);
 ListReturnCode PushBack     (List_t* list, ListElem_t elem);
-ListReturnCode Insert       (List_t* list, ListElem_t elem, size_t pos, FuncMode mode);
+ListReturnCode Insert       (List_t* list, ListElem_t elem, size_t pos, size_t* rel_next, size_t* rel_prev);
 ListReturnCode InsertAfter  (List_t* list, ListElem_t elem, size_t pos);
 ListReturnCode InsertBefore (List_t* list, ListElem_t elem, size_t pos);
 
 ListReturnCode Get          (List_t* list, size_t pos, ListElem_t* ret_elem);
 
-ListReturnCode PopFront     (List_t* list);
-ListReturnCode PopBack      (List_t* list);
+ListReturnCode PopFront     (List_t* list, ListElem_t* ret_elem);
+ListReturnCode PopBack      (List_t* list, ListElem_t* ret_elem);
+ListReturnCode Pop          (List_t* list, size_t pos, ListElem_t* ret_elem);
 ListReturnCode Erase        (List_t* list, size_t pos);
 ListReturnCode Clear        (List_t* list);
 

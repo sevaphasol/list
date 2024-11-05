@@ -23,12 +23,22 @@ int main()
 
     Dump(&list);
 
-    // InsertBefore(&list, 666, 2);
-    Insert(&list, 666, 2, LIST_INSERT_BEFORE_MODE);
+    InsertBefore(&list, 666, 2);
 
     Dump(&list);
 
     Erase(&list, 3);
+
+    Dump(&list);
+
+    ListElem_t elem;
+    PopBack(&list, &elem);
+
+    printf("%d\n", elem);
+
+    Dump(&list);
+
+    Clear(&list);
 
     Dump(&list);
 
