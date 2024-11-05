@@ -40,6 +40,13 @@ enum ListReturnCode
     LIST_ARGS_NULL_PTR_ERROR,
     LIST_INVALID_POS_ERROR,
     LIST_OVERFLOW_ERROR,
+    LIST_INVALID_MODE_ERROR,
+};
+
+enum FuncMode
+{
+    LIST_INSERT_AFTER_MODE,
+    LIST_INSERT_BEFORE_MODE,
 };
 
 typedef int ListElem_t;
@@ -78,13 +85,14 @@ ListReturnCode DotInitFree  (List_t* list, FILE* dot_file);
 ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
 ListReturnCode MakeHtmlDump (List_t* list);
 
-ListReturnCode Front        (List_t* list, size_t* ret_pos);
-ListReturnCode Back         (List_t* list, size_t* ret_pos);
+ListReturnCode Front        (List_t* list, ListElem_t* ret_elem);
+ListReturnCode Back         (List_t* list, ListElem_t* ret_elem);
 ListReturnCode Next         (List_t* list, size_t pos, size_t* ret_pos);
 ListReturnCode Prev         (List_t* list, size_t pos, size_t* ret_pos);
 
 ListReturnCode PushFront    (List_t* list, ListElem_t elem);
 ListReturnCode PushBack     (List_t* list, ListElem_t elem);
+ListReturnCode Insert       (List_t* list, ListElem_t elem, size_t pos, FuncMode mode);
 ListReturnCode InsertAfter  (List_t* list, ListElem_t elem, size_t pos);
 ListReturnCode InsertBefore (List_t* list, ListElem_t elem, size_t pos);
 

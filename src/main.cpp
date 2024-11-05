@@ -23,7 +23,8 @@ int main()
 
     Dump(&list);
 
-    InsertBefore(&list, 666, 2);
+    // InsertBefore(&list, 666, 2);
+    Insert(&list, 666, 2, LIST_INSERT_BEFORE_MODE);
 
     Dump(&list);
 

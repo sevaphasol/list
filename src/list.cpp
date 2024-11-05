@@ -309,24 +309,24 @@ ListReturnCode MakeHtmlDump(List_t* list)
 
 //------------------------------------------------//
 
-ListReturnCode Front(List_t* list, size_t* ret_pos)
+ListReturnCode Front(List_t* list, ListElem_t* ret_elem)
 {
-    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
-    DO_IF(!list, return LIST_ARGS_NULL_PTR_ERROR);
+    DO_IF(!list,     return LIST_STRUCT_NULL_PTR_ERROR);
+    DO_IF(!ret_elem, return LIST_ARGS_NULL_PTR_ERROR);
 
-    *ret_pos = list->data[list->next[0]];
+    *ret_elem = list->data[list->next[0]];
 
     return LIST_SUCCESS;
 }
 
 //------------------------------------------------//
 
-ListReturnCode Back(List_t* list, size_t* ret_pos)
+ListReturnCode Back(List_t* list, ListElem_t* ret_elem)
 {
-    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
-    DO_IF(!list, return LIST_ARGS_NULL_PTR_ERROR);
+    DO_IF(!list,     return LIST_STRUCT_NULL_PTR_ERROR);
+    DO_IF(!ret_elem, return LIST_ARGS_NULL_PTR_ERROR);
 
-    *ret_pos = list->data[list->prev[0]];
+    *ret_elem = list->data[list->prev[0]];
 
     return LIST_SUCCESS;
 }
@@ -384,30 +384,7 @@ ListReturnCode InsertAfter(List_t* list, ListElem_t elem, size_t pos)
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
 
-    size_t free_pos = list->free;
-
-    if (free_pos == -1)
-    {
-        fprintf(stderr, "LIST OVERFLOW\n");
-
-        return LIST_OVERFLOW_ERROR;
-    }
-
-    list->free                  = list->next[list->free];
-
-    list->data[free_pos]        = elem;
-    list->prev[free_pos]        = pos;
-    list->next[free_pos]        = list->next[pos];
-
-    list->prev[list->next[pos]] = free_pos;
-    list->next[pos]             = free_pos;
-
-    if (pos == list->prev[0])
-    {
-        list->prev[0] = free_pos;
-    }
-
-    list->len++;
+    Insert(list, elem, pos, LIST_INSERT_AFTER_MODE);
 
     return LIST_SUCCESS;
 }
@@ -419,6 +396,36 @@ ListReturnCode InsertBefore(List_t* list, ListElem_t elem, size_t pos)
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
 
+    Insert(list, elem, pos, LIST_INSERT_BEFORE_MODE);
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+ListReturnCode Insert(List_t* list, ListElem_t elem, size_t pos, FuncMode mode)
+{
+    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
+    DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
+
+    size_t* rel_next = nullptr;
+    size_t* rel_prev = nullptr;
+
+    if      (mode == LIST_INSERT_AFTER_MODE)
+    {
+        rel_next  = list->next; // relative next to current mode
+        rel_prev  = list->prev;
+    }
+    else if (mode == LIST_INSERT_BEFORE_MODE)
+    {
+        rel_next  = list->prev;
+        rel_prev  = list->next;
+    }
+    else
+    {
+        DO_IF(true, return LIST_INVALID_MODE_ERROR);
+    }
+
     size_t free_pos = list->free;
 
     if (free_pos == -1)
@@ -428,14 +435,19 @@ ListReturnCode InsertBefore(List_t* list, ListElem_t elem, size_t pos)
         return LIST_OVERFLOW_ERROR;
     }
 
-    list->free                  = list->next[list->free];
+    list->free              = list->next[list->free];
 
-    list->data[free_pos]        = elem;
-    list->next[free_pos]        = pos;
-    list->prev[free_pos]        = list->prev[pos];
+    list->data[free_pos]    = elem;
+    rel_prev[free_pos]      = pos;
+    rel_next[free_pos]      = rel_next[pos];
 
-    list->next[list->prev[pos]] = free_pos;
-    list->prev[pos]             = free_pos;
+    rel_prev[rel_next[pos]] = free_pos;
+    rel_next[pos]           = free_pos;
+
+    if (pos == rel_prev[0])
+    {
+        rel_prev[0] = free_pos;
+    }
 
     list->len++;
 
