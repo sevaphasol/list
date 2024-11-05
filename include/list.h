@@ -72,9 +72,9 @@ ListReturnCode Dump         (List_t* list);
 
 ListReturnCode MakePngDump  (List_t* list);
 ListReturnCode MakeDotDump  (List_t* list, FILE* dot_file);
-ListReturnCode DotPrintData (List_t* list, FILE* dot_file);
+ListReturnCode DotInitSeq   (List_t* list, FILE* dot_file);
 ListReturnCode DotPrintSeq  (size_t* ind_arr, size_t len, FILE* dot_file);
-// ListReturnCode DotPrintPrev (List_t* list, FILE* dot_file);
+ListReturnCode DotInitFree  (List_t* list, FILE* dot_file);
 ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
 ListReturnCode MakeHtmlDump (List_t* list);
 

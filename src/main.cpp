@@ -27,6 +27,10 @@ int main()
 
     Dump(&list);
 
+    Erase(&list, 3);
+
+    Dump(&list);
+
     if (Dtor(&list) != LIST_SUCCESS)
     {
         return EXIT_FAILURE;

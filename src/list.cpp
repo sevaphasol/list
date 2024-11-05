@@ -109,15 +109,18 @@ ListReturnCode MakePngDump(List_t* list)
 
 ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 {
+    DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
     fputs("digraph G{\n"
           "rankdir=LR;\n"
           "node[color=\"red\",fontsize=14];\n",
           dot_file);
 
-    DotPrintData(list, dot_file);
+    DotInitSeq  (list, dot_file);
     DotPrintSeq (list->next, list->len, dot_file);
     DotPrintSeq (list->prev, list->len, dot_file);
-    // DotPrintFree(list, dot_file);
+    DotInitFree (list, dot_file);
+    DotPrintFree(list, dot_file);
 
     fputs("}\n", dot_file);
 
@@ -126,25 +129,25 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 
 //------------------------------------------------//
 
-ListReturnCode DotPrintData(List_t* list, FILE* dot_file)
+ListReturnCode DotInitSeq(List_t* list, FILE* dot_file)
 {
-    for (int i = 0; i < list->size; i++)
+    DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
+    size_t ind    = 0;
+    int    iter   = 0;
+
+    while (iter++ < list->len)
     {
-        fprintf(dot_file, "elem%d["
+        fprintf(dot_file, "elem%ld["
                           "shape=\"Mrecord\", "
-                          "label=\"%d | data = %d | next = %ld | prev = %ld"
+                          "label=\"%ld | data = %d | next = %ld | prev = %ld"
                           "\"];\n",
-                           i, i , list->data[i], list->next[i], list->prev[i]);
+                           ind, ind , list->data[ind], list->next[ind], list->prev[ind]);
+
+        ind = list->next[ind];
+
+        if (!ind) break;
     }
-
-    fputs("edge[color=\"darkred\",fontsize=12, penwidth=1, weight=1000];\n", dot_file);
-
-    for (int i = 0; i < list->size; i++)
-    {
-        fprintf(dot_file, "elem%d->", i);
-    }
-
-    fprintf(dot_file, "elem%d;\n", 0);
 
     return LIST_SUCCESS;
 }
@@ -153,21 +156,67 @@ ListReturnCode DotPrintData(List_t* list, FILE* dot_file)
 
 ListReturnCode DotPrintSeq(size_t* ind_arr, size_t len, FILE* dot_file)
 {
+    DO_IF(!ind_arr || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
     fputs("edge[color=\"darkgreen\",fontsize=12, penwidth=1];\n", dot_file);
 
-    fputs("elem0->", dot_file);
+    size_t ind    = 0;
+    int    iter   = 0;
 
-    size_t ind  = ind_arr[0];
-    int    iter = 0;
-
-    while (ind != 0 && iter++ < len - 1)
+    while (iter++ < len)
     {
         fprintf(dot_file, "elem%ld->", ind);
 
         ind = ind_arr[ind];
+
+        if (!ind)
+        {
+            fputs("elem0;\n", dot_file);
+
+            break;
+        }
     }
 
-    fputs("elem0;\n", dot_file);
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+ListReturnCode DotInitFree(List_t* list, FILE* dot_file)
+{
+    DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
+    size_t free_ind = list->free;
+
+    fprintf(dot_file, "free["
+                      "shape=\"Mrecord\", "
+                      "label=\"free | free = %ld"
+                      "\"];\n",
+                      free_ind);
+
+    if (free_ind == -1)
+    {
+        return LIST_SUCCESS;
+    }
+
+    size_t iter = 0;
+
+    while (iter++ < list->size)
+    {
+        fprintf(dot_file, "free_elem%ld["
+                          "shape=\"Mrecord\", "
+                          "label=\"%ld | data = %d | next = %ld | prev = %ld"
+                          "\"];\n",
+                          free_ind, free_ind , list->data[free_ind],
+                          list->next[free_ind], list->prev[free_ind]);
+
+        if (list->next[free_ind] == -1)
+        {
+            break;
+        }
+
+        free_ind = list->next[free_ind];
+    }
 
     return LIST_SUCCESS;
 }
@@ -176,52 +225,28 @@ ListReturnCode DotPrintSeq(size_t* ind_arr, size_t len, FILE* dot_file)
 
 ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
 {
+    DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
     fputs("edge[color=\"green\",fontsize=12, penwidth=1];\n", dot_file);
 
-    fprintf(dot_file, "free["
-                      "shape=\"Mrecord\", "
-                      "label=\"free | free = %ld"
-                      "\"];\n",
-                      list->free);
-
-    if (list->free == -1)
-    {
-        return LIST_SUCCESS;
-    }
-
     size_t free_ind = list->free;
+    size_t iter = 0;
 
-    while (list->next[free_ind] != -1)
+    fputs("free->", dot_file);
+
+    while (iter++ < list->size)
     {
-        fprintf(dot_file, "elem%ld["
-                    "shape=\"Mrecord\", "
-                    "label=\"%ld | data = %d | next = %ld | prev = %ld"
-                    "\"];\n",
-                    free_ind, free_ind , list->data[free_ind],
-                    list->next[free_ind], list->prev[free_ind]);
+        if (list->next[free_ind] == -1)
+        {
+            fprintf(dot_file, "free_elem%ld;\n", free_ind);
+
+            break;
+        }
+
+        fprintf(dot_file, "free_elem%ld->", free_ind);
 
         free_ind = list->next[free_ind];
     }
-
-    fprintf(dot_file, "elem%ld["
-                "shape=\"Mrecord\", "
-                "label=\"%ld | data = %d | next = %ld | prev = %ld"
-                "\"];\n",
-                free_ind, free_ind , list->data[free_ind],
-                list->next[free_ind], list->prev[free_ind]);
-
-    free_ind = list->free;
-
-    fprintf(dot_file, "free->");
-
-    while (list->next[free_ind] != -1)
-    {
-        fprintf(dot_file, "elem%ld->", free_ind);
-
-        free_ind = list->next[free_ind];
-    }
-
-    fprintf(dot_file, "elem%ld;\n", free_ind);
 
     return LIST_SUCCESS;
 }
@@ -230,6 +255,8 @@ ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
 
 ListReturnCode MakeHtmlDump(List_t* list)
 {
+    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
+
     FILE* dump_file = list->list_dump.dump_file;
 
     fprintf(dump_file, "list Dump[%p]\n\n", list);
@@ -461,10 +488,10 @@ ListReturnCode Erase(List_t* list, size_t pos)
     list->prev[list->next[pos]] = list->prev[pos];
 
     list->next[pos]             = list->free;
-    list->free                    = pos;
+    list->free                  = pos;
     list->prev[pos]             = Poison;
 
-    list->data--;
+    // list->len--;
 
     return LIST_SUCCESS;
 }
