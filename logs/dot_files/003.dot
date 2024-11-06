@@ -1,0 +1,21 @@
+digraph G{
+rankdir=LR;
+bgcolor="#bcbddc";
+node[style=filled, color="#756bb1", fillcolor="#a1d99b", fontcolor="#49006a", fontsize=14];
+elem0[shape="Mrecord", label="0 | data = -1 | next = 1 | prev = 3"];
+elem1[shape="Mrecord", label="1 | data = 1488 | next = 2 | prev = 0"];
+elem2[shape="Mrecord", label="2 | data = 1489 | next = 3 | prev = 1"];
+elem3[shape="Mrecord", label="3 | data = 1490 | next = 0 | prev = 2"];
+edge[color="#006d2c",fontsize=12, penwidth=1];
+elem0->elem1->elem2->elem3->elem0;
+edge[color="#006d2c",fontsize=12, penwidth=1];
+elem0->elem3->elem2->elem1->elem0;
+node[style=filled, color="#756bb1", fillcolor="#9ecae1", fontcolor="#67000d"fontsize=14];
+free[shape="Mrecord", label="free | free = 4"];
+free_elem4[shape="Mrecord", label="4 | data = -1 | next = 5 | prev = -1"];
+free_elem5[shape="Mrecord", label="5 | data = -1 | next = 6 | prev = -1"];
+free_elem6[shape="Mrecord", label="6 | data = -1 | next = 7 | prev = -1"];
+free_elem7[shape="Mrecord", label="7 | data = -1 | next = -1 | prev = -1"];
+edge[color="#08519c",fontsize=12, penwidth=1];
+free->free_elem4->free_elem5->free_elem6->free_elem7;
+}
