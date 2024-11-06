@@ -1,6 +1,7 @@
 #ifndef LIST_H__
 #define LIST_H__
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 

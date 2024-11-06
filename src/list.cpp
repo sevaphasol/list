@@ -1,16 +1,23 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #include <syscall.h>
 
 #include "list.h"
 
-static ListReturnCode MakePngDump  (List_t* list);
-static ListReturnCode MakeDotDump  (List_t* list, FILE* dot_file);
-static ListReturnCode DotInitSeq   (List_t* list, FILE* dot_file);
-static ListReturnCode DotPrintSeq  (size_t* ind_arr, size_t len, FILE* dot_file);
-static ListReturnCode DotInitFree  (List_t* list, FILE* dot_file);
-static ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
-static ListReturnCode MakeHtmlDump (List_t* list);
+static ListReturnCode MakePngDump       (List_t* list);
+static ListReturnCode MakeDotDump       (List_t* list, FILE* dot_file);
+static ListReturnCode DotInitSeq        (List_t* list, FILE* dot_file);
+static ListReturnCode DotPrintSeq       (size_t* ind_arr, size_t len, FILE* dot_file);
+static ListReturnCode DotInitFree       (List_t* list, FILE* dot_file);
+static ListReturnCode DotPrintFree      (List_t* list, FILE* dot_file);
+static ListReturnCode MakeHtmlDump      (List_t* list);
+
+static ListReturnCode HtmlPrintInfoElem (FILE* html_file, size_t var,               const char* var_name);
+static ListReturnCode HtmlPrintIntArr   (FILE* html_file, size_t size, int*    arr, const char* arr_name);
+static ListReturnCode HtmlPrintSizeTArr (FILE* html_file, size_t size, size_t* arr, const char* arr_name);
+
+static int            HtmlColorPrint    (FILE* html_file, const char* color, const char* str, ...);
 
 //------------------------------------------------//
 
@@ -80,7 +87,7 @@ ListReturnCode Dump(List_t* list)
 {
     DO_IF(!list || !list->list_dump.dump_file || !list->data || !list->next, return LIST_ARGS_NULL_PTR_ERROR);
 
-    MakePngDump(list);
+    MakePngDump (list);
     MakeHtmlDump(list);
 
     return LIST_SUCCESS;
@@ -264,59 +271,108 @@ ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
 
 //------------------------------------------------//
 
+int HtmlColorPrint(FILE* html_file, const char* color, const char* str, ...)
+{
+    va_list list;
+    va_start(list, str);
+
+	fprintf(html_file, "<font color = \"%s\">", color);
+
+    int n_printed_chars = vfprintf(html_file, str, list);
+
+	fprintf(html_file, "</font>");
+
+    va_end(list);
+
+    return n_printed_chars;
+}
+
+//------------------------------------------------//
+
+ListReturnCode HtmlPrintInfoElem(FILE* html_file, size_t var, const char* var_name)
+{
+    fprintf       (html_file,                "%s = ", var_name);
+    HtmlColorPrint(html_file, InfoElemColor, "%ld", var);
+
+    fputc         ('\n', html_file);
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+ListReturnCode HtmlPrintIntArr(FILE* html_file, size_t size, int* arr, const char* arr_name)
+{
+    fprintf       (html_file, "%s[", arr_name);
+    HtmlColorPrint(html_file, PtrColor, "%p", arr);
+    fputs         ("]: ", html_file);
+
+    for (int i = 0; i < size; i++)
+    {
+        HtmlColorPrint(html_file, DataElemColor, "%5d ", arr[i]);
+    }
+
+    fputc('\n', html_file);
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+static ListReturnCode HtmlPrintSizeTArr(FILE* html_file, size_t size, size_t* arr, const char* arr_name)
+{
+    fprintf       (html_file, "%s[", arr_name);
+    HtmlColorPrint(html_file, PtrColor, "%p", arr);
+    fputs         ("]: ", html_file);
+
+    for (int i = 0; i < size; i++)
+    {
+        HtmlColorPrint(html_file, DataElemColor, "%5ld ", arr[i]);
+    }
+
+    fputc('\n', html_file);
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
 ListReturnCode MakeHtmlDump(List_t* list)
 {
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
 
     FILE* dump_file = list->list_dump.dump_file;
 
-    fprintf(dump_file, "list Dump[<font color=\"%s\">%p</font>]\n\n", PtrColor, list);
+    fputs            ("list Dump[", dump_file);
+    HtmlColorPrint   (dump_file, PtrColor, "%p", list);
+    fputs            ("]\n\n", dump_file);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "data[<font color=\"%s\">%p</font>]: ", PtrColor, list->data);
+    HtmlPrintIntArr  (dump_file, list->size, list->data, "data");
+    HtmlPrintSizeTArr(dump_file, list->size, list->next, "next");
+    HtmlPrintSizeTArr(dump_file, list->size, list->prev, "prev");
 
-    for (int i = 0; i < list->size - 1; i++)
-    {
-        fprintf(dump_file, "<font color=\"%s\">%4d</font> ", DataElemColor, list->data[i]);
-    }
-
-    fprintf(dump_file, "<font color=\"%s\">%4d</font>\n", DataElemColor, list->data[list->size - 1]);
+    fputc            ('\n', dump_file);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "next[<font color=\"%s\">%p</font>]: ", PtrColor, list->next);
+    HtmlPrintInfoElem(dump_file, list->free, "list->free");
+    HtmlPrintInfoElem(dump_file, list->size, "list->size");
+    HtmlPrintInfoElem(dump_file, list->len,  "list->len " );
 
-    for (int i = 0; i < list->size - 1; i++)
-    {
-        fprintf(dump_file, "<font color=\"%s\">%4ld</font> ", DataElemColor, list->next[i]);
-    }
-
-    fprintf(dump_file, "<font color=\"%s\">%4ld</font>\n", DataElemColor, list->next[list->size - 1]);
+    fputc            ('\n', dump_file);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "prev[<font color=\"%s\">%p</font>]: ", PtrColor, list->prev);
-
-    for (int i = 0; i < list->size - 1; i++)
-    {
-        fprintf(dump_file, "<font color=\"%s\">%4ld</font> ", DataElemColor, list->prev[i]);
-    }
-
-    fprintf(dump_file, "<font color=\"%s\">%4ld</font>\n\n", DataElemColor, list->prev[list->size - 1]);
+    fprintf          (dump_file, "<img src=%s width=75%%>\n\n", list->list_dump.last_png_file_name);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "list->free: <font color=\"%s\">%ld</font>\n",   InfoElemColor, list->free);
-    fprintf(dump_file, "list->size: <font color=\"%s\">%ld</font>\n",   InfoElemColor, list->size);
-    fprintf(dump_file, "list->len:  <font color=\"%s\">%ld</font>\n\n", InfoElemColor, list->len);
+    HtmlColorPrint   (dump_file, SeparatorColor, "//------------------------------------------------------------------//");
 
-    //------------------------------------------------//
-
-    fprintf(dump_file, "<img src=%s width=75%%>\n\n", list->list_dump.last_png_file_name);
-
-    fprintf(dump_file, "<font color=\"%s\">//------------------------------------------------------------------//</font>\n\n",
-            SeparatorColor);
+    fputc            ('\n', dump_file);
+    fputc            ('\n', dump_file);
 
     return LIST_SUCCESS;
 }
@@ -561,7 +617,8 @@ ListReturnCode Len(List_t* list, size_t* len)
 
 ListReturnCode Verify(List_t* list)
 {
-    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
+    DO_IF(!list,                      return LIST_STRUCT_NULL_PTR_ERROR);
+    DO_IF(!list->prev || !list->next, return LIST_ARGS_NULL_PTR_ERROR);
 
     size_t ind  = 0;
     int    iter = 0;
