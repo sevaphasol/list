@@ -29,6 +29,23 @@ const size_t  MinListSize = 8;
 const size_t  BufSize     = 100;
 const int     Poison      = -1;
 
+const char* const BackGroundColor         = "#bcbddc";
+
+const char* const SeqNodeBackGroundColor  = "#a1d99b";
+const char* const SeqNodeBorderColor      = "#756bb1";
+const char* const SeqEdgeColor            = "#006d2c";
+const char* const SeqFontColor            = "#49006a";
+
+const char* const FreeNodeBackGroundColor = "#9ecae1";
+const char* const FreeNodeBorderColor     = "#756bb1";
+const char* const FreeEdgeColor           = "#08519c";
+const char* const FreeFontColor           = "#67000d";
+
+const char* const PtrColor                = "#ff0000";
+const char* const DataElemColor           = "#006837";
+const char* const InfoElemColor           = "#045a8d";
+const char* const SeparatorColor          = "#980043";
+
 const char* const DumpFile = "ListDump.html";
 
 enum ListReturnCode
@@ -41,12 +58,7 @@ enum ListReturnCode
     LIST_INVALID_POS_ERROR,
     LIST_OVERFLOW_ERROR,
     LIST_INVALID_MODE_ERROR,
-};
-
-enum FuncMode
-{
-    LIST_INSERT_AFTER_MODE,
-    LIST_INSERT_BEFORE_MODE,
+    LIST_VERIFICATION_FAILED_ERROR,
 };
 
 typedef int ListElem_t;
@@ -74,16 +86,8 @@ typedef struct List
 ListReturnCode Ctor         (List_t* list, size_t size);
 ListReturnCode Dtor         (List_t* list);
 
-ListReturnCode Verify       (List_t* list);
 ListReturnCode Dump         (List_t* list);
-
-ListReturnCode MakePngDump  (List_t* list);
-ListReturnCode MakeDotDump  (List_t* list, FILE* dot_file);
-ListReturnCode DotInitSeq   (List_t* list, FILE* dot_file);
-ListReturnCode DotPrintSeq  (size_t* ind_arr, size_t len, FILE* dot_file);
-ListReturnCode DotInitFree  (List_t* list, FILE* dot_file);
-ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
-ListReturnCode MakeHtmlDump (List_t* list);
+ListReturnCode Verify       (List_t* list);
 
 ListReturnCode Front        (List_t* list, ListElem_t* ret_elem);
 ListReturnCode Back         (List_t* list, ListElem_t* ret_elem);
@@ -104,6 +108,6 @@ ListReturnCode Pop          (List_t* list, size_t pos, ListElem_t* ret_elem);
 ListReturnCode Erase        (List_t* list, size_t pos);
 ListReturnCode Clear        (List_t* list);
 
-ListReturnCode Empty        (List_t* list, size_t* len);
+ListReturnCode UTests       ();
 
 #endif // LIST_H__

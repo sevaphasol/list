@@ -4,6 +4,14 @@
 
 #include "list.h"
 
+static ListReturnCode MakePngDump  (List_t* list);
+static ListReturnCode MakeDotDump  (List_t* list, FILE* dot_file);
+static ListReturnCode DotInitSeq   (List_t* list, FILE* dot_file);
+static ListReturnCode DotPrintSeq  (size_t* ind_arr, size_t len, FILE* dot_file);
+static ListReturnCode DotInitFree  (List_t* list, FILE* dot_file);
+static ListReturnCode DotPrintFree (List_t* list, FILE* dot_file);
+static ListReturnCode MakeHtmlDump (List_t* list);
+
 //------------------------------------------------//
 
 ListReturnCode Ctor(List_t* list, size_t size)
@@ -41,8 +49,12 @@ ListReturnCode Ctor(List_t* list, size_t size)
 
     list->list_dump.dump_file_name = DumpFile;
     list->list_dump.dump_file = fopen(list->list_dump.dump_file_name, "w");
-    fprintf(list->list_dump.dump_file, "<pre>\n");
-
+    fprintf(list->list_dump.dump_file, "<pre>\n"
+                                       "<style>\n"
+                                       "body {\n"
+                                       "    background: %s;\n"
+                                       "}\n"
+                                       "</style>\n", BackGroundColor);
     return LIST_SUCCESS;
 }
 
@@ -58,15 +70,6 @@ ListReturnCode Dtor(List_t* list)
     list->size = 0;
     free(list->data);
     free(list->next);
-
-    return LIST_SUCCESS;
-}
-
-//------------------------------------------------//
-
-ListReturnCode ListVerify(List_t* list)
-{
-    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
 
     return LIST_SUCCESS;
 }
@@ -114,10 +117,9 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 {
     DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
 
-    fputs("digraph G{\n"
-          "rankdir=LR;\n"
-          "node[color=\"red\",fontsize=14];\n",
-          dot_file);
+    fprintf(dot_file, "digraph G{\n"
+                      "rankdir=LR;\n"
+                      "bgcolor=\"%s\";\n", BackGroundColor);
 
     DotInitSeq  (list, dot_file);
     DotPrintSeq (list->next, list->len, dot_file);
@@ -135,6 +137,9 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
 ListReturnCode DotInitSeq(List_t* list, FILE* dot_file)
 {
     DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
+
+    fprintf(dot_file, "node[style=filled, color=\"%s\", fillcolor=\"%s\", fontcolor=\"%s\", fontsize=14];\n",
+                       SeqNodeBorderColor, SeqNodeBackGroundColor, SeqFontColor);
 
     size_t ind  = 0;
     int    iter = 0;
@@ -161,7 +166,7 @@ ListReturnCode DotPrintSeq(size_t* ind_arr, size_t len, FILE* dot_file)
 {
     DO_IF(!ind_arr || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
 
-    fputs("edge[color=\"darkgreen\",fontsize=12, penwidth=1];\n", dot_file);
+    fprintf(dot_file, "edge[color=\"%s\",fontsize=12, penwidth=1];\n", SeqEdgeColor);
 
     size_t ind  = 0;
     int    iter = 0;
@@ -189,6 +194,9 @@ ListReturnCode DotInitFree(List_t* list, FILE* dot_file)
 {
     DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
 
+    fprintf(dot_file, "node[style=filled, color=\"%s\", fillcolor=\"%s\", fontcolor=\"%s\"fontsize=14];\n",
+                       FreeNodeBorderColor, FreeNodeBackGroundColor, FreeFontColor);
+
     size_t free_ind = list->free;
 
     fprintf(dot_file, "free["
@@ -197,7 +205,7 @@ ListReturnCode DotInitFree(List_t* list, FILE* dot_file)
                       "\"];\n",
                       free_ind);
 
-    if (free_ind == -1)
+    if (free_ind == Poison)
     {
         return LIST_SUCCESS;
     }
@@ -213,7 +221,7 @@ ListReturnCode DotInitFree(List_t* list, FILE* dot_file)
                           free_ind, free_ind , list->data[free_ind],
                           list->next[free_ind], list->prev[free_ind]);
 
-        if (list->next[free_ind] == -1)
+        if (list->next[free_ind] == Poison)
         {
             break;
         }
@@ -230,7 +238,7 @@ ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
 {
     DO_IF(!list || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
 
-    fputs("edge[color=\"green\",fontsize=12, penwidth=1];\n", dot_file);
+    fprintf(dot_file, "edge[color=\"%s\",fontsize=12, penwidth=1];\n", FreeEdgeColor);
 
     size_t free_ind = list->free;
     size_t iter     = 0;
@@ -239,7 +247,7 @@ ListReturnCode DotPrintFree(List_t* list, FILE* dot_file)
 
     while (iter++ < list->size)
     {
-        if (list->next[free_ind] == -1)
+        if (list->next[free_ind] == Poison)
         {
             fprintf(dot_file, "free_elem%ld;\n", free_ind);
 
@@ -262,50 +270,53 @@ ListReturnCode MakeHtmlDump(List_t* list)
 
     FILE* dump_file = list->list_dump.dump_file;
 
-    fprintf(dump_file, "list Dump[%p]\n\n", list);
+    fprintf(dump_file, "list Dump[<font color=\"%s\">%p</font>]\n\n", PtrColor, list);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "data[%p]: ", list->data);
+    fprintf(dump_file, "data[<font color=\"%s\">%p</font>]: ", PtrColor, list->data);
 
     for (int i = 0; i < list->size - 1; i++)
     {
-        fprintf(dump_file, "%3d ", list->data[i]);
+        fprintf(dump_file, "<font color=\"%s\">%4d</font> ", DataElemColor, list->data[i]);
     }
 
-    fprintf(dump_file, "%3d\n", list->data[list->size - 1]);
+    fprintf(dump_file, "<font color=\"%s\">%4d</font>\n", DataElemColor, list->data[list->size - 1]);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "next[%p]: ", list->next);
+    fprintf(dump_file, "next[<font color=\"%s\">%p</font>]: ", PtrColor, list->next);
 
     for (int i = 0; i < list->size - 1; i++)
     {
-        fprintf(dump_file, "%3ld ", list->next[i]);
+        fprintf(dump_file, "<font color=\"%s\">%4ld</font> ", DataElemColor, list->next[i]);
     }
 
-    fprintf(dump_file, "%3ld\n", list->next[list->size - 1]);
+    fprintf(dump_file, "<font color=\"%s\">%4ld</font>\n", DataElemColor, list->next[list->size - 1]);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "prev[%p]: ", list->prev);
+    fprintf(dump_file, "prev[<font color=\"%s\">%p</font>]: ", PtrColor, list->prev);
 
     for (int i = 0; i < list->size - 1; i++)
     {
-        fprintf(dump_file, "%3ld ", list->prev[i]);
+        fprintf(dump_file, "<font color=\"%s\">%4ld</font> ", DataElemColor, list->prev[i]);
     }
 
-    fprintf(dump_file, "%3ld\n\n", list->prev[list->size - 1]);
+    fprintf(dump_file, "<font color=\"%s\">%4ld</font>\n\n", DataElemColor, list->prev[list->size - 1]);
 
     //------------------------------------------------//
 
-    fprintf(dump_file, "list->free: %ld\n", list->free);
-    fprintf(dump_file, "list->size: %ld\n", list->size);
-    fprintf(dump_file, "list->len:  %ld\n\n", list->len);
+    fprintf(dump_file, "list->free: <font color=\"%s\">%ld</font>\n",   InfoElemColor, list->free);
+    fprintf(dump_file, "list->size: <font color=\"%s\">%ld</font>\n",   InfoElemColor, list->size);
+    fprintf(dump_file, "list->len:  <font color=\"%s\">%ld</font>\n\n", InfoElemColor, list->len);
 
     //------------------------------------------------//
 
     fprintf(dump_file, "<img src=%s width=75%%>\n\n", list->list_dump.last_png_file_name);
+
+    fprintf(dump_file, "<font color=\"%s\">//------------------------------------------------------------------//</font>\n\n",
+            SeparatorColor);
 
     return LIST_SUCCESS;
 }
@@ -542,6 +553,82 @@ ListReturnCode Len(List_t* list, size_t* len)
     DO_IF(!len,  return LIST_ARGS_NULL_PTR_ERROR);
 
     *len = list->len;
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+ListReturnCode Verify(List_t* list)
+{
+    DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
+
+    size_t ind  = 0;
+    int    iter = 0;
+
+    while (iter++ < list->len)
+    {
+        if (list->prev[list->next[ind]] != ind || list->next[list->prev[ind]] != ind)
+        {
+            DO_IF(true, return LIST_VERIFICATION_FAILED_ERROR);
+        }
+
+        ind = list->next[ind];
+
+        if (!ind)
+        {
+            break;
+        }
+    }
+
+    return LIST_SUCCESS;
+}
+
+//------------------------------------------------//
+
+ListReturnCode UTests()
+{
+    List_t list = {LIST_INIT};
+
+    if (Ctor(&list, 8) != LIST_SUCCESS)
+    {
+        Dtor(&list);
+
+        return LIST_FAILURE;
+    }
+
+    for (int i = 0; i < 5; i++)
+    {
+        Dump(&list);
+
+        InsertAfter(&list, 1488 + i, i);
+    }
+
+    Dump(&list);
+
+    InsertBefore(&list, 666, 2);
+
+    Dump(&list);
+
+    Erase(&list, 3);
+
+    Dump(&list);
+
+    ListElem_t elem;
+    PopBack(&list, &elem);
+
+    Dump(&list);
+
+    Verify(&list);
+
+    Clear(&list);
+
+    Dump(&list);
+
+    if (Dtor(&list) != LIST_SUCCESS)
+    {
+        return LIST_FAILURE;
+    }
 
     return LIST_SUCCESS;
 }
