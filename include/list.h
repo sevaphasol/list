@@ -78,9 +78,9 @@ typedef struct List
     size_t      elem_size;
     size_t      len;
     ListElem_t* data;
-    size_t*     next;
-    size_t*     prev;
-    size_t      free;
+    int*        next;
+    int*        prev;
+    int         free;
     ListDump_t  list_dump;
 } List_t;
 
@@ -92,21 +92,21 @@ ListReturnCode Verify       (List_t* list);
 
 ListReturnCode Front        (List_t* list, ListElem_t* ret_elem);
 ListReturnCode Back         (List_t* list, ListElem_t* ret_elem);
-ListReturnCode Next         (List_t* list, size_t pos, size_t* ret_pos);
-ListReturnCode Prev         (List_t* list, size_t pos, size_t* ret_pos);
+ListReturnCode Next         (List_t* list, int pos, int* ret_pos);
+ListReturnCode Prev         (List_t* list, int pos, int* ret_pos);
 
 ListReturnCode PushFront    (List_t* list, ListElem_t elem);
 ListReturnCode PushBack     (List_t* list, ListElem_t elem);
-ListReturnCode Insert       (List_t* list, ListElem_t elem, size_t pos, size_t* rel_next, size_t* rel_prev);
-ListReturnCode InsertAfter  (List_t* list, ListElem_t elem, size_t pos);
-ListReturnCode InsertBefore (List_t* list, ListElem_t elem, size_t pos);
+ListReturnCode Insert       (List_t* list, ListElem_t elem, int pos, int* rel_next, int* rel_prev);
+ListReturnCode InsertAfter  (List_t* list, ListElem_t elem, int pos);
+ListReturnCode InsertBefore (List_t* list, ListElem_t elem, int pos);
 
-ListReturnCode Get          (List_t* list, size_t pos, ListElem_t* ret_elem);
+ListReturnCode Get          (List_t* list, int pos, ListElem_t* ret_elem);
 
 ListReturnCode PopFront     (List_t* list, ListElem_t* ret_elem);
 ListReturnCode PopBack      (List_t* list, ListElem_t* ret_elem);
-ListReturnCode Pop          (List_t* list, size_t pos, ListElem_t* ret_elem);
-ListReturnCode Erase        (List_t* list, size_t pos);
+ListReturnCode Pop          (List_t* list, int pos, ListElem_t* ret_elem);
+ListReturnCode Erase        (List_t* list, int pos);
 ListReturnCode Clear        (List_t* list);
 
 ListReturnCode UTests       ();

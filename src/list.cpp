@@ -8,15 +8,13 @@
 static ListReturnCode MakePngDump       (List_t* list);
 static ListReturnCode MakeDotDump       (List_t* list, FILE* dot_file);
 static ListReturnCode DotInitSeq        (List_t* list, FILE* dot_file);
-static ListReturnCode DotPrintSeq       (size_t* ind_arr, size_t len, FILE* dot_file);
+static ListReturnCode DotPrintSeq       (int*    ind_arr, size_t len, FILE* dot_file);
 static ListReturnCode DotInitFree       (List_t* list, FILE* dot_file);
 static ListReturnCode DotPrintFree      (List_t* list, FILE* dot_file);
 static ListReturnCode MakeHtmlDump      (List_t* list);
-
-static ListReturnCode HtmlPrintInfoElem (FILE* html_file, size_t var,               const char* var_name);
-static ListReturnCode HtmlPrintIntArr   (FILE* html_file, size_t size, int*    arr, const char* arr_name);
-static ListReturnCode HtmlPrintSizeTArr (FILE* html_file, size_t size, size_t* arr, const char* arr_name);
-
+static ListReturnCode HtmlPrintInfoElem (FILE* html_file, size_t var,            const char* var_name);
+static ListReturnCode HtmlPrintArr      (FILE* html_file, size_t size, int* arr, const char* arr_name);
+static ListReturnCode HtmlPrintImg      (FILE* html_file, size_t size,           const char* img_file_name);
 static int            HtmlColorPrint    (FILE* html_file, const char* color, const char* str, ...);
 
 //------------------------------------------------//
@@ -37,7 +35,7 @@ ListReturnCode Ctor(List_t* list, size_t size)
     list->len  = 1;
 
     list->data = (ListElem_t*) calloc(size,     sizeof(list->elem_size));
-    list->next = (size_t*)     calloc(size * 2, sizeof(size_t));
+    list->next = (int*)        calloc(size * 2, sizeof(size_t));
     list->prev = list->next + size;
 
     DO_IF(!list->data || !list->next || !list->prev, return LIST_ALLOCATE_ERROR);
@@ -128,11 +126,11 @@ ListReturnCode MakeDotDump(List_t* list, FILE* dot_file)
                       "rankdir=LR;\n"
                       "bgcolor=\"%s\";\n", BackGroundColor);
 
-    DotInitSeq  (list, dot_file);
+    DotInitSeq  (list,                  dot_file);
     DotPrintSeq (list->next, list->len, dot_file);
     DotPrintSeq (list->prev, list->len, dot_file);
-    DotInitFree (list, dot_file);
-    DotPrintFree(list, dot_file);
+    DotInitFree (list,                  dot_file);
+    DotPrintFree(list,                  dot_file);
 
     fputs("}\n", dot_file);
 
@@ -155,7 +153,7 @@ ListReturnCode DotInitSeq(List_t* list, FILE* dot_file)
     {
         fprintf(dot_file, "elem%ld["
                           "shape=\"Mrecord\", "
-                          "label=\"%ld | data = %d | next = %ld | prev = %ld"
+                          "label=\"%ld | data = %d | next = %d | prev = %d"
                           "\"];\n",
                            ind, ind , list->data[ind], list->next[ind], list->prev[ind]);
 
@@ -169,7 +167,7 @@ ListReturnCode DotInitSeq(List_t* list, FILE* dot_file)
 
 //------------------------------------------------//
 
-ListReturnCode DotPrintSeq(size_t* ind_arr, size_t len, FILE* dot_file)
+ListReturnCode DotPrintSeq(int* ind_arr, size_t len, FILE* dot_file)
 {
     DO_IF(!ind_arr || !dot_file, return LIST_STRUCT_NULL_PTR_ERROR);
 
@@ -223,7 +221,7 @@ ListReturnCode DotInitFree(List_t* list, FILE* dot_file)
     {
         fprintf(dot_file, "free_elem%ld["
                           "shape=\"Mrecord\", "
-                          "label=\"%ld | data = %d | next = %ld | prev = %ld"
+                          "label=\"%ld | data = %d | next = %d | prev = %d"
                           "\"];\n",
                           free_ind, free_ind , list->data[free_ind],
                           list->next[free_ind], list->prev[free_ind]);
@@ -301,7 +299,7 @@ ListReturnCode HtmlPrintInfoElem(FILE* html_file, size_t var, const char* var_na
 
 //------------------------------------------------//
 
-ListReturnCode HtmlPrintIntArr(FILE* html_file, size_t size, int* arr, const char* arr_name)
+ListReturnCode HtmlPrintArr(FILE* html_file, size_t size, int* arr, const char* arr_name)
 {
     fprintf       (html_file, "%s[", arr_name);
     HtmlColorPrint(html_file, PtrColor, "%p", arr);
@@ -319,18 +317,9 @@ ListReturnCode HtmlPrintIntArr(FILE* html_file, size_t size, int* arr, const cha
 
 //------------------------------------------------//
 
-static ListReturnCode HtmlPrintSizeTArr(FILE* html_file, size_t size, size_t* arr, const char* arr_name)
+ListReturnCode HtmlPrintImg(FILE* html_file, size_t size, const char* img_file_name)
 {
-    fprintf       (html_file, "%s[", arr_name);
-    HtmlColorPrint(html_file, PtrColor, "%p", arr);
-    fputs         ("]: ", html_file);
-
-    for (int i = 0; i < size; i++)
-    {
-        HtmlColorPrint(html_file, DataElemColor, "%5ld ", arr[i]);
-    }
-
-    fputc('\n', html_file);
+    fprintf(html_file, "<img src=%s width=%ld%%>\n\n", img_file_name, size);
 
     return LIST_SUCCESS;
 }
@@ -343,15 +332,17 @@ ListReturnCode MakeHtmlDump(List_t* list)
 
     FILE* dump_file = list->list_dump.dump_file;
 
+    //------------------------------------------------//
+
     fputs            ("list Dump[", dump_file);
     HtmlColorPrint   (dump_file, PtrColor, "%p", list);
     fputs            ("]\n\n", dump_file);
 
     //------------------------------------------------//
 
-    HtmlPrintIntArr  (dump_file, list->size, list->data, "data");
-    HtmlPrintSizeTArr(dump_file, list->size, list->next, "next");
-    HtmlPrintSizeTArr(dump_file, list->size, list->prev, "prev");
+    HtmlPrintArr     (dump_file, list->size, list->data, "data");
+    HtmlPrintArr     (dump_file, list->size, list->next, "next");
+    HtmlPrintArr     (dump_file, list->size, list->prev, "prev");
 
     fputc            ('\n', dump_file);
 
@@ -359,20 +350,19 @@ ListReturnCode MakeHtmlDump(List_t* list)
 
     HtmlPrintInfoElem(dump_file, list->free, "list->free");
     HtmlPrintInfoElem(dump_file, list->size, "list->size");
-    HtmlPrintInfoElem(dump_file, list->len,  "list->len " );
+    HtmlPrintInfoElem(dump_file, list->len,  "list->len ");
 
     fputc            ('\n', dump_file);
 
     //------------------------------------------------//
 
-    fprintf          (dump_file, "<img src=%s width=75%%>\n\n", list->list_dump.last_png_file_name);
+    HtmlPrintImg     (dump_file, 75, list->list_dump.last_png_file_name);
 
     //------------------------------------------------//
 
     HtmlColorPrint   (dump_file, SeparatorColor, "//------------------------------------------------------------------//");
 
-    fputc            ('\n', dump_file);
-    fputc            ('\n', dump_file);
+    fputs            ("\n\n", dump_file);
 
     return LIST_SUCCESS;
 }
@@ -403,7 +393,7 @@ ListReturnCode Back(List_t* list, ListElem_t* ret_elem)
 
 //------------------------------------------------//
 
-ListReturnCode Next(List_t* list, size_t pos, size_t* ret_pos)
+ListReturnCode Next(List_t* list, int pos, int* ret_pos)
 {
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!list, return LIST_ARGS_NULL_PTR_ERROR);
@@ -415,7 +405,7 @@ ListReturnCode Next(List_t* list, size_t pos, size_t* ret_pos)
 
 //------------------------------------------------//
 
-ListReturnCode Prev(List_t* list, size_t pos, size_t* ret_pos)
+ListReturnCode Prev(List_t* list, int pos, int* ret_pos)
 {
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!list, return LIST_ARGS_NULL_PTR_ERROR);
@@ -449,7 +439,7 @@ ListReturnCode PushBack(List_t* list, ListElem_t elem)
 
 //------------------------------------------------//
 
-ListReturnCode InsertAfter(List_t* list, ListElem_t elem, size_t pos)
+ListReturnCode InsertAfter(List_t* list, ListElem_t elem, int pos)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
@@ -461,7 +451,7 @@ ListReturnCode InsertAfter(List_t* list, ListElem_t elem, size_t pos)
 
 //------------------------------------------------//
 
-ListReturnCode InsertBefore(List_t* list, ListElem_t elem, size_t pos)
+ListReturnCode InsertBefore(List_t* list, ListElem_t elem, int pos)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
@@ -473,12 +463,12 @@ ListReturnCode InsertBefore(List_t* list, ListElem_t elem, size_t pos)
 
 //------------------------------------------------//
 
-ListReturnCode Insert(List_t* list, ListElem_t elem, size_t pos, size_t* rel_next, size_t* rel_prev)
+ListReturnCode Insert(List_t* list, ListElem_t elem, int pos, int* rel_next, int* rel_prev)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
 
-    size_t free_pos = list->free;
+    int free_pos = list->free;
 
     if (free_pos == Poison)
     {
@@ -508,7 +498,7 @@ ListReturnCode Insert(List_t* list, ListElem_t elem, size_t pos, size_t* rel_nex
 
 //------------------------------------------------//
 
-ListReturnCode Get(List_t* list, size_t pos, ListElem_t* ret_elem)
+ListReturnCode Get(List_t* list, int pos, ListElem_t* ret_elem)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
@@ -542,7 +532,7 @@ ListReturnCode PopBack(List_t* list, ListElem_t* ret_elem)
 
 //------------------------------------------------//
 
-ListReturnCode Pop(List_t* list, size_t pos, ListElem_t* ret_elem)
+ListReturnCode Pop(List_t* list, int pos, ListElem_t* ret_elem)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
@@ -566,7 +556,7 @@ ListReturnCode Pop(List_t* list, size_t pos, ListElem_t* ret_elem)
 
 //------------------------------------------------//
 
-ListReturnCode Erase(List_t* list, size_t pos)
+ListReturnCode Erase(List_t* list, int pos)
 {
     DO_IF(!list,                          return LIST_STRUCT_NULL_PTR_ERROR);
     DO_IF(!(0 < pos || pos < list->size), return LIST_INVALID_POS_ERROR);
