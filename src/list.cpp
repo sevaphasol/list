@@ -5,6 +5,13 @@
 
 //------------------------------------------------//
 
+static ListReturnCode Insert (List_t* list, ListElem_t elem,
+                              int pos, int* rel_next, int* rel_prev);
+
+static ListReturnCode Pop    (List_t* list, int pos, ListElem_t* ret_elem);
+
+//------------------------------------------------//
+
 ListReturnCode Ctor(List_t* list, size_t size)
 {
     DO_IF(!list, return LIST_STRUCT_NULL_PTR_ERROR);

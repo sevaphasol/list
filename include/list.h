@@ -60,7 +60,6 @@ ListReturnCode Prev         (List_t* list, int pos, int* ret_pos);
 
 ListReturnCode PushFront    (List_t* list, ListElem_t elem);
 ListReturnCode PushBack     (List_t* list, ListElem_t elem);
-ListReturnCode Insert       (List_t* list, ListElem_t elem, int pos, int* rel_next, int* rel_prev);
 ListReturnCode InsertAfter  (List_t* list, ListElem_t elem, int pos);
 ListReturnCode InsertBefore (List_t* list, ListElem_t elem, int pos);
 
@@ -68,7 +67,6 @@ ListReturnCode Get          (List_t* list, int pos, ListElem_t* ret_elem);
 
 ListReturnCode PopFront     (List_t* list, ListElem_t* ret_elem);
 ListReturnCode PopBack      (List_t* list, ListElem_t* ret_elem);
-ListReturnCode Pop          (List_t* list, int pos, ListElem_t* ret_elem);
 ListReturnCode Erase        (List_t* list, int pos);
 ListReturnCode Clear        (List_t* list);
 
