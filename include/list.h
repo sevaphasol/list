@@ -34,7 +34,7 @@ enum ListReturnCode
 
 typedef int ListElem_t;
 
-typedef struct List
+struct List_t
 {
     size_t      size;
     size_t      elem_size;
@@ -44,7 +44,7 @@ typedef struct List
     int*        prev;
     int         free;
     ListDump_t  list_dump;
-} List_t;
+};
 
 extern ListDumpReturnCode Dump (List_t* list);
 
@@ -71,7 +71,5 @@ ListReturnCode PopBack      (List_t* list, ListElem_t* ret_elem);
 ListReturnCode Pop          (List_t* list, int pos, ListElem_t* ret_elem);
 ListReturnCode Erase        (List_t* list, int pos);
 ListReturnCode Clear        (List_t* list);
-
-ListReturnCode UTests       ();
 
 #endif // LIST_H__

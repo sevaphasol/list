@@ -1,7 +1,4 @@
-#include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
-#include <syscall.h>
 
 #include "list.h"
 #include "list_dump.h"
@@ -327,55 +324,6 @@ ListReturnCode Verify(List_t* list)
         {
             break;
         }
-    }
-
-    return LIST_SUCCESS;
-}
-
-//------------------------------------------------//
-
-ListReturnCode UTests()
-{
-    List_t list = {};
-
-    if (Ctor(&list, 8) != LIST_SUCCESS)
-    {
-        Dtor(&list);
-
-        return LIST_FAILURE;
-    }
-
-    for (int i = 0; i < 5; i++)
-    {
-        Dump(&list);
-
-        InsertAfter(&list, 1488 + i, i);
-    }
-
-    Dump(&list);
-
-    InsertBefore(&list, 666, 2);
-
-    Dump(&list);
-
-    Erase(&list, 3);
-
-    Dump(&list);
-
-    ListElem_t elem;
-    PopBack(&list, &elem);
-
-    Dump(&list);
-
-    Verify(&list);
-
-    Clear(&list);
-
-    Dump(&list);
-
-    if (Dtor(&list) != LIST_SUCCESS)
-    {
-        return LIST_FAILURE;
     }
 
     return LIST_SUCCESS;

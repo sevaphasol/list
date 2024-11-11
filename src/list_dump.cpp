@@ -6,7 +6,7 @@
 #include "list.h"
 #include "list_dump.h"
 
-ListDumpReturnCode Dump (List_t* list);
+ListDumpReturnCode        Dump              (List_t* list);
 
 static ListDumpReturnCode MakePngDump       (List_t* list);
 static ListDumpReturnCode MakeDotDump       (List_t* list, FILE* dot_file);
@@ -299,7 +299,9 @@ ListDumpReturnCode MakeHtmlDump(List_t* list)
 
     //------------------------------------------------//
 
-    HtmlColorPrint   (dump_file, SeparatorColor, "//------------------------------------------------------------------//");
+    HtmlColorPrint   (dump_file,
+                      SeparatorColor,
+                      "//------------------------------------------------------------------//");
 
     fputs            ("\n\n", dump_file);
 

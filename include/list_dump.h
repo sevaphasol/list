@@ -29,12 +29,12 @@ enum ListDumpReturnCode
     LIST_DUMP_ARGS_NULL_PTR_ERROR,
 };
 
-typedef struct ListDump
+struct ListDump_t
 {
     const char* dump_file_name;
     FILE*       dump_file;
     int         n_dumps;
     char        last_png_file_name[BufSize];
-} ListDump_t;
+};
 
 #endif // LIST_DUMP_H__
