@@ -1,4 +1,5 @@
 .vscode
 bin
 build
-unit_tests
+unit_tests/bin
+unit_tests/build
